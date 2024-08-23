@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizon Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { PlusCircle, Check, Clock, RefreshCw, X, ChevronRight, Sun, Sunrise, Sunset } = lucide;
+
+        const GoalStatus = {
+            NOT_STARTED: 'Not Started',
+            IN_PROGRESS: 'In Progress',
+            COMPLETED: 'Completed',
+        };
+
+        const getStatusIcon = (status) => {
+            switch(status) {
+                case GoalStatus.NOT_STARTED: return <Sunrise className="h-4 w-4" />;
+                case GoalStatus.IN_PROGRESS: return <Sun className="h-4 w-4" />;
+                case GoalStatus.COMPLETED: return <Sunset className="h-4 w-4" />;
+                default: return null;
+            }
+        };
+
+        const GoalCard = ({ goal, onUpdateStatus, onDelete }) => (
+            <div className="bg-white shadow-md rounded-lg mb-4 overflow-hidden">
+                <div className={`h-2 ${
+                    goal.status === GoalStatus.COMPLETED ? 'bg-green-500' :
+                    goal.status === GoalStatus.IN_PROGRESS ? 'bg-yellow-500' :
+                    'bg-gray-300'
+                }`} />
+                <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-lg">{goal.title}</h3>
+                        <div className="flex space-x-2">
+                            <button className={`p-1 rounded ${goal.status === GoalStatus.NOT_STARTED ? 'bg-gray-200' : 'bg-white border border-gray-300'}`} onClick={() => onUpdateStatus(goal.id, GoalStatus.NOT_STARTED)}><Sunrise className="h-4 w-4" /></button>
+                            <button className={`p-1 rounded ${goal.status === GoalStatus.IN_PROGRESS ? 'bg-gray-200' : 'bg-white border border-gray-300'}`} onClick={() => onUpdateStatus(goal.id, GoalStatus.IN_PROGRESS)}><Sun className="h-4 w-4" /></button>
+                            <button className={`p-1 rounded ${goal.status === GoalStatus.COMPLETED ? 'bg-gray-200' : 'bg-white border border-gray-300'}`} onClick={() => onUpdateStatus(goal.id, GoalStatus.COMPLETED)}><Sunset className="h-4 w-4" /></button>
+                            <button className="p-1 rounded bg-red-500 text-white" onClick={() => onDelete(goal.id)}><X className="h-4 w-4" /></button>
+                        </div>
+                    </div>
+                    <p className="text-sm text-gray-600">{goal.description}</p>
+                    <div className="mt-2 flex items-center">
+                        <div className="text-sm font-medium mr-2">{getStatusIcon(goal.status)}</div>
+                        <div className="text-sm text-gray-500">{goal.status}</div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const GoalProgress = ({ goals }) => {
+            const completed = goals.filter(g => g.status === GoalStatus.COMPLETED).length;
+            const total = goals.length;
+            const percentage = total > 0 ? (completed / total) * 100 : 0;
+
+            return (
+                <div className="bg-white shadow-md rounded-lg p-4 mb-6">
+                    <h3 className="font-bold text-lg mb-2">Journey Progress</h3>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                        <div className="bg-blue-600 h-2.5 rounded-full" style={{width: `${percentage}%`}}></div>
+                    </div>
+                    <p className="text-sm text-gray-600">{completed} of {total} goals completed</p>
+                </div>
+            );
+        };
+
+        const HorizonDashboard = () => {
+            const [goals, setGoals] = useState([]);
+            const [newGoal, setNewGoal] = useState({ title: '', description: '' });
+            const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+            useEffect(() => {
+                fetchGoals();
+            }, []);
+
+            const fetchGoals = async () => {
+                const response = await fetch('/api/goals');
+                const data = await response.json();
+                setGoals(data);
+            };
+
+            const addGoal = async () => {
+                if (newGoal.title && newGoal.description) {
+                    const response = await fetch('/api/goals', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(newGoal),
+                    });
+                    const data = await response.json();
+                    setGoals([...goals, data]);
+                    setNewGoal({ title: '', description: '' });
+                    setIsDialogOpen(false);
+                }
+            };
+
+            const updateGoalStatus = async (id, status) => {
+                const response = await fetch(`/api/goals/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status }),
+                });
+                const updatedGoal = await response.json();
+                setGoals(goals.map(goal => goal.id === id ? updatedGoal : goal));
+            };
+
+            const deleteGoal = async (id) => {
+                await fetch(`/api/goals/${id}`, { method: 'DELETE' });
+                setGoals(goals.filter(goal => goal.id !== id));
+            };
+
+            return (
+                <div className="container mx-auto p-4 max-w-3xl">
+                    <h1 className="text-4xl font-bold mb-6 text-center">Horizon</h1>
+                    
+                    <GoalProgress goals={goals} />
+
+                    <button 
+                        className="w-full mb-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center"
+                        onClick={() => setIsDialogOpen(true)}
+                    >
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add New Goal
+                    </button>
+
+                    {isDialogOpen && (
+                        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onClick={() => setIsDialogOpen(false)}>
+                            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" onClick={e => e.stopPropagation()}>
+                                <div className="mt-3 text-center">
+                                    <h3 className="text-lg leading-6 font-medium text-gray-900">Add a New Goal</h3>
+                                    <div className="mt-2 px-7 py-3">
+                                        <input
+                                            type="text"
+                                            placeholder="Goal Title"
+                                            value={newGoal.title}
+                                            onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+                                            className="mb-2 px-3 py-2 border border-gray-300 rounded-md w-full"
+                                        />
+                                        <textarea
+                                            placeholder="Goal Description"
+                                            value={newGoal.description}
+                                            onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
+                                            className="mb-2 px-3 py-2 border border-gray-300 rounded-md w-full"
+                                        />
+                                        <button 
+                                            onClick={addGoal}
+                                            className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                        >
+                                            Add Goal
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        {goals.map(goal => (
+                            <GoalCard
+                                key={goal.id}
+                                goal={goal}
+                                onUpdateStatus={updateGoalStatus}
+                                onDelete={deleteGoal}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<HorizonDashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>

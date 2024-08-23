@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Horizon Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        overflow: hidden;
+      }
+      .space-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          radial-gradient(ellipse at center, transparent 0%, #000 100%),
+          linear-gradient(45deg, #1a0a2e 0%, #0d0d2c 50%, #1a0a2e 100%);
+        background-size: 200% 200%;
+        animation: gradientShift 15s ease infinite;
+      }
+      .accretion-disk {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 200vmax;
+        height: 200vmax;
+        border-radius: 50%;
+        transform: translate(-50%, -50%) rotate(0deg);
+        background: 
+          radial-gradient(ellipse at center, transparent 30%, rgba(255, 165, 0, 0.1) 50%, transparent 70%),
+          conic-gradient(from 0deg, transparent 0deg, rgba(255, 140, 0, 0.2) 90deg, transparent 180deg);
+        animation: rotate 60s linear infinite;
+      }
+      @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      @keyframes rotate {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="space-background"></div>
+    <div class="accretion-disk"></div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
