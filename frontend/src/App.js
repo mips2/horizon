@@ -4,7 +4,7 @@ import { PlusCircle } from 'lucide-react';
 import GoalCard from './components/GoalCard';
 import GoalProgress from './components/GoalProgress';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://horizon-4i6z.onrender.com/api';
 
 function App() {
   const [goals, setGoals] = useState([]);
