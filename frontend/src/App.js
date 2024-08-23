@@ -6,7 +6,7 @@ import GoalCard from './components/GoalCard';
 import GoalProgress from './components/GoalProgress';
 
 const API_URL = 'https://horizon-4i6z.onrender.com/api';
-const HF_API_KEY = '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';  // Replace with your actual API key
+const HF_API_KEY = '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'; // Replace with your actual API key
 const hf = new HfInference(HF_API_KEY);
 
 function App() {
@@ -66,23 +66,21 @@ function App() {
 
   const generateDescription = async () => {
     if (!newGoal.title) return;
-  
+
     setIsGenerating(true);
     setError(null);
     console.log('Generating description for:', newGoal.title);
-  
+
     try {
-      // Generate a summary of the goal title
       const result = await hf.textGeneration({
         model: 'gpt2',
         inputs: `Summarize: "${newGoal.title}".`,
         parameters: { max_new_tokens: 50, temperature: 0.7 }
       });
-  
+
       console.log('Generated result:', result);
-  
+
       if (result && result.generated_text) {
-        // Remove the initial prompt from the output
         const description = result.generated_text.replace(`Summarize: "${newGoal.title}".`, '').trim();
         setNewGoal(prev => ({ ...prev, description }));
       } else {
@@ -95,14 +93,10 @@ function App() {
       setIsGenerating(false);
     }
   };
-  
-  
-  
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl relative z-10">
+    <div className="container mx-auto p-4 max-w-3xl relative z-10 flex flex-col h-screen"> 
       <h1 className="text-4xl font-bold mb-6 text-center text-white">Event Horizon</h1>
-      
       <GoalProgress goals={goals} />
 
       {error && (
@@ -111,7 +105,7 @@ function App() {
         </div>
       )}
 
-      <button 
+      <button
         className="w-full mb-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center transition duration-300"
         onClick={() => setIsDialogOpen(true)}
       >
@@ -146,7 +140,7 @@ function App() {
                     {isGenerating ? 'Generating...' : <Wand2 className="h-5 w-5" />}
                   </button>
                 </div>
-                <button 
+                <button
                   onClick={addGoal}
                   className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-300"
                 >
@@ -158,15 +152,17 @@ function App() {
         </div>
       )}
 
-      <div>
-        {goals.map(goal => (
-          <GoalCard
-            key={goal.id}
-            goal={goal}
-            onUpdateStatus={updateGoalStatus}
-            onDelete={deleteGoal}
-          />
-        ))}
+      <div className="goal-cards-container flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-blue-500 hover:scrollbar-thumb-blue-700 scrollbar-track-blue-100"> 
+        <div>
+          {goals.map(goal => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              onUpdateStatus={updateGoalStatus}
+              onDelete={deleteGoal}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
